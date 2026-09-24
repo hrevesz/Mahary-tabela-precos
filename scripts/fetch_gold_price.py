@@ -16,10 +16,10 @@ from bs4 import BeautifulSoup
 URL = "https://pt.bullion-rates.com/gold/BRL-history.htm"
 OUT_FILE = Path(__file__).resolve().parent.parent / "cotacao.json"
 
-# Casa com: DD/MM/AA <preço/g> <preço/oz> — funciona tanto em tabela HTML
-# normal (get_text) quanto se o layout usar separadores tipo "|".
+# Casa com: DD/MM/AA <preço/g com vírgula decimal> <preço/oz, que na
+# fonte vem só como inteiro com ponto de milhar, sem decimal>.
 ROW_PATTERN = re.compile(
-    r"(\d{2}/\d{2}/\d{2})[\s|]+([\d]{1,3}(?:\.\d{3})*,\d{2})[\s|]+([\d]{1,3}(?:\.\d{3})*,\d{2})"
+    r"(\d{2}/\d{2}/\d{2})\s+([\d]{1,3}(?:\.\d{3})*,\d{2})\s+([\d]{1,3}(?:\.\d{3})*(?:,\d{2})?)"
 )
 
 
