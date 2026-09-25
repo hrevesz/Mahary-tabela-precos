@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mahary — Tabela de Preços</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --primary: #1B4F72;
+    --dark: #123049;
+    --bg: #f4f7f9;
+    --card: #ffffff;
+    --text: #1c2b34;
+    --text-dim: #5a6b76;
+    --line: #d8e1e6;
+    --gold: #c9a227;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 18px 14px 50px; }
+
+  /* Cabeçalho */
+  .header {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--primary);
+    border-radius: 6px;
+    padding: 16px 16px 14px;
+    margin-bottom: 16px;
+  }
+  .header-top { display: flex; align-items: center; gap: 12px; }
+  .logo-img { height: 40px; width: auto; display: block; }
+
+  .cotacao-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+    flex-wrap: wrap; gap: 8px;
+  }
+  .cotacao-label { font-size: 12px; color: var(--text-dim); }
+  .cotacao-value { font-size: 20px; font-weight: 700; color: var(--dark); }
+  .cotacao-edit {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim);
+  }
+  .cotacao-edit input {
+    width: 88px; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line);
+    font-size: 13px; font-family: inherit; color: var(--text);
+  }
+  .cotacao-meta { font-size: 10.5px; color: var(--text-faint, var(--text-dim)); width: 100%; margin-top: 4px; }
+  .data-badge {
+    font-size: 11px; color: var(--text-dim); margin-top: 6px;
+  }
+
+  /* Tabelas */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .table-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; gap: 8px; flex-wrap: wrap;
+  }
+  .table-title { font-weight: 700; color: var(--dark); font-size: 15px; }
+  .table-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+  .export-btn {
+    font-size: 12px; font-weight: 600; color: #fff; background: var(--primary);
+    border: none; border-radius: 4px; padding: 7px 12px; cursor: pointer;
+  }
+  .export-btn:active { background: var(--dark); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: #fff; background: var(--primary); font-size: 11.5px; font-weight: 600; }
+  tbody tr:nth-child(even) { background: #f7fafb; }
+  .metal-row td { font-style: italic; color: var(--text-dim); }
+
+  .export-frame {
+    background: #fff;
+    padding: 14px;
+  }
+  .mini-header { display: none; }
+  .exporting .mini-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .mini-logo { height: 24px; width: auto; display: block; }
+  .exporting .mini-header .meta { font-size: 10px; color: var(--text-dim); }
+
+  footer {
+    text-align: center; font-size: 11px; color: var(--text-dim); margin-top: 10px;
+  }
+
+  @media (max-width: 420px) {
+    table { font-size: 12.5px; }
+    th, td { padding: 6px 5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-top">
+      <img src="logo.png" alt="Mahary Metaloquímica" class="logo-img">
+    </div>
+    <div class="cotacao-row">
+      <div>
+        <div class="cotacao-label">Cotação do ouro hoje</div>
+        <div class="cotacao-value">R$ <span id="cotacao-display">--</span> /g</div>
+        <div class="data-badge" id="data-badge"></div>
+      </div>
+      <div class="cotacao-edit">
+        <label for="cotacao-input">ajustar:</label>
+        <input type="number" step="0.01" id="cotacao-input" placeholder="0,00">
+        <button class="export-btn" id="cotacao-apply" style="padding:5px 9px;">OK</button>
+      </div>
+    </div>
+    <div class="cotacao-meta" id="cotacao-meta"></div>
+  </div>
+
+  <!-- Tabela fixa -->
+  <div class="table-card">
+    <div class="table-card-head">
+      <div>
+        <div class="table-title">Tabela Fixa — Lotes 10 a 99g</div>
+        <div class="table-sub">Preço por grama, não varia com a cotação do dia</div>
+      </div>
+      <button class="export-btn" data-export="fixa">Exportar imagem</button>
+    </div>
+    <div class="export-frame" id="frame-fixa">
+      <div class="mini-header">
+        <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
+        <div class="meta" id="mini-meta-fixa"></div>
+      </div>
+      <table id="table-fixa"></table>
+    </div>
+  </div>
+
+  <!-- Tabela variável 100-999g -->
+  <div class="table-card">
+    <div class="table-card-head">
+      <div>
+        <div class="table-title">Lotes 100 a 999g</div>
+        <div class="table-sub">Preço/g = cotação × (milésimo + 4) / 1000</div>
+      </div>
+      <button class="export-btn" data-export="var1">Exportar imagem</button>
+    </div>
+    <div class="export-frame" id="frame-var1">
+      <div class="mini-header">
+        <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
+        <div class="meta" id="mini-meta-var1"></div>
+      </div>
+      <table id="table-var1"></table>
+    </div>
+  </div>
+
+  <!-- Tabela variável 1000g+ -->
+  <div class="table-card">
+    <div class="table-card-head">
+      <div>
+        <div class="table-title">Lotes 1000g ou mais</div>
+        <div class="table-sub">Preço/g = cotação × (milésimo + 3) / 1000</div>
+      </div>
+      <button class="export-btn" data-export="var2">Exportar imagem</button>
+    </div>
+    <div class="export-frame" id="frame-var2">
+      <div class="mini-header">
+        <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
+        <div class="meta" id="mini-meta-var2"></div>
+      </div>
+      <table id="table-var2"></table>
+    </div>
+  </div>
+
+  <footer>Coluna Urgência = +30% sobre o preço normal · Mínimo de lote conforme faixa</footer>
+</div>
+
+<script>
+/* ===================== CONFIG — copiado da Política Comercial do Midas (25/09/2026) ===================== */
+
+// Milésimos de ouro usados nas três tabelas (fixa, 100-999g e 1000g+)
+const MILESIMOS_OURO = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+
+// Tabela fixa 0-99g: preços NÃO variam com a cotação do dia.
+const TABELA_FIXA_OURO = {
+  1: 5.70,  2: 6.75,  3: 7.65,  4: 8.55,  5: 9.45,
+  7: 11.35, 10: 14.20, 15: 18.90, 20: 23.60, 25: 28.35,
+  30: 33.10, 35: 37.80, 40: 42.50, 45: 47.25, 50: 52.00,
+};
+
+// Prata/Ródio/Platina: preço fixo por faixa (não seguem a fórmula da cotação do ouro),
+// mas MUDAM de valor entre as três faixas — confirmado na Política Comercial do Midas.
+const OUTROS_METAIS = {
+  fixa: {
+    prata: { 5: 0.88, 10: 2.10, 20: 2.30, 30: 2.60 },
+    rodio_branco: 12.00,
+    platina: 4.70,
+  },
+  var100_999: {
+    prata: { 5: 0.88, 10: 1.10, 20: 1.30, 30: 1.55 },
+    rodio_branco: 9.70,
+    platina: 4.10,
+  },
+  var1000_mais: {
+    prata: { 5: 0.88, 10: 1.00, 20: 1.20, 30: 1.45 },
+    rodio_branco: 8.90,
+    platina: 3.90,
+  },
+};
+
+// Banho de Estanho e Banho de Níquel: preço fixo, igual nas três faixas.
+const BANHOS_FIXOS = { estanho: 0.55, niquel: 0.55 };
+
+const URGENCIA_MULT = 1.3;
+
+/* ===================== LÓGICA ===================== */
+
+let cotacaoAtual = null;
+
+function fmt(v) {
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function precoOuroVariavel(cotacao, milesimo, fator) {
+  return cotacao * (milesimo + fator) / 1000;
+}
+
+function metaisRowsHtml(faixaKey) {
+  const m = OUTROS_METAIS[faixaKey];
+  let html = '';
+  Object.entries(m.prata).forEach(([mil, preco]) => {
+    html += `<tr class="metal-row"><td>Prata ${mil} milésimos</td><td>${fmt(preco)}</td><td>${fmt(preco * URGENCIA_MULT)}</td></tr>`;
+  });
+  html += `<tr class="metal-row"><td>Ródio Branco</td><td>${fmt(m.rodio_branco)}</td><td>${fmt(m.rodio_branco * URGENCIA_MULT)}</td></tr>`;
+  html += `<tr class="metal-row"><td>Platina</td><td>${fmt(m.platina)}</td><td>${fmt(m.platina * URGENCIA_MULT)}</td></tr>`;
+  html += `<tr class="metal-row"><td>Banho de Estanho</td><td>${fmt(BANHOS_FIXOS.estanho)}</td><td>${fmt(BANHOS_FIXOS.estanho * URGENCIA_MULT)}</td></tr>`;
+  html += `<tr class="metal-row"><td>Banho de Níquel</td><td>${fmt(BANHOS_FIXOS.niquel)}</td><td>${fmt(BANHOS_FIXOS.niquel * URGENCIA_MULT)}</td></tr>`;
+  return html;
+}
+
+function renderTabelaFixa() {
+  const table = document.getElementById('table-fixa');
+  let html = '<thead><tr><th>Serviço</th><th>Normal (R$/g)</th><th>Urgência (R$/g)</th></tr></thead><tbody>';
+  MILESIMOS_OURO.forEach(mil => {
+    const preco = TABELA_FIXA_OURO[mil];
+    html += `<tr><td>Ouro ${mil} mil${mil === 1 ? 'ésimo' : 'ésimos'}</td><td>${fmt(preco)}</td><td>${fmt(preco * URGENCIA_MULT)}</td></tr>`;
+  });
+  html += metaisRowsHtml('fixa');
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function renderTabelaVariavel(tableId, fator, faixaKey) {
+  const table = document.getElementById(tableId);
+  if (!cotacaoAtual) {
+    table.innerHTML = '<tbody><tr><td style="padding:16px;color:#5a6b76;">Aguardando cotação do ouro…</td></tr></tbody>';
+    return;
+  }
+  let html = '<thead><tr><th>Serviço</th><th>Normal (R$/g)</th><th>Urgência (R$/g)</th></tr></thead><tbody>';
+  MILESIMOS_OURO.forEach(mil => {
+    const preco = precoOuroVariavel(cotacaoAtual, mil, fator);
+    html += `<tr><td>Ouro ${mil} mil${mil === 1 ? 'ésimo' : 'ésimos'}</td><td>${fmt(preco)}</td><td>${fmt(preco * URGENCIA_MULT)}</td></tr>`;
+  });
+  html += metaisRowsHtml(faixaKey);
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function renderAll() {
+  renderTabelaFixa();
+  renderTabelaVariavel('table-var1', 4, 'var100_999');
+  renderTabelaVariavel('table-var2', 3, 'var1000_mais');
+  document.getElementById('cotacao-display').textContent = cotacaoAtual ? fmt(cotacaoAtual) : '--';
+}
+
+async function carregarCotacao() {
+  const metaEl = document.getElementById('cotacao-meta');
+  const badgeEl = document.getElementById('data-badge');
+  try {
+    const resp = await fetch('cotacao.json', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('sem cotacao.json');
+    const data = await resp.json();
+    cotacaoAtual = data.preco_grama_brl;
+    badgeEl.textContent = `cotação de ${data.data_cotacao}`;
+    metaEl.textContent = `Atualizado automaticamente às ${new Date(data.atualizado_em).toLocaleString('pt-BR')}`;
+  } catch (e) {
+    metaEl.textContent = 'Não consegui buscar a cotação automática — ajuste manualmente ao lado.';
+  }
+  renderAll();
+}
+
+document.getElementById('cotacao-apply').addEventListener('click', () => {
+  const input = document.getElementById('cotacao-input');
+  const val = parseFloat(input.value.replace(',', '.'));
+  if (!isNaN(val) && val > 0) {
+    cotacaoAtual = val;
+    document.getElementById('data-badge').textContent = 'cotação ajustada manualmente';
+    document.getElementById('cotacao-meta').textContent = '';
+    renderAll();
+    input.value = '';
+  }
+});
+
+/* ===================== EXPORTAR IMAGEM ===================== */
+
+async function exportarImagem(frameId, nomeArquivo, metaId) {
+  const frame = document.getElementById(frameId);
+
+  // Preenche o texto do mini-cabeçalho (a logo já está no DOM desde o carregamento da página)
+  document.getElementById(metaId).textContent =
+    `${document.getElementById('data-badge').textContent} · Cotação R$ ${fmt(cotacaoAtual || 0)}/g`;
+
+  frame.classList.add('exporting');
+
+  // Espera dois frames de pintura + as imagens da frame terminarem de carregar,
+  // pra garantir que a logo já está desenhada antes do html2canvas capturar.
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const imgs = frame.querySelectorAll('img');
+  await Promise.all(Array.from(imgs).map(img =>
+    img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })
+  ));
+
+  const canvas = await html2canvas(frame, { backgroundColor: '#ffffff', scale: 2 });
+  frame.classList.remove('exporting');
+
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], `${nomeArquivo}.png`, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Tabela de Preços Mahary' });
+        return;
+      } catch (e) { /* usuário cancelou ou share falhou — cai no download */ }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${nomeArquivo}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+}
+
+document.querySelectorAll('[data-export]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.export;
+    const map = {
+      fixa: ['frame-fixa', 'mahary-tabela-fixa', 'mini-meta-fixa'],
+      var1: ['frame-var1', 'mahary-tabela-100-999g', 'mini-meta-var1'],
+      var2: ['frame-var2', 'mahary-tabela-1000g-mais', 'mini-meta-var2'],
+    };
+    const [frameId, nome, metaId] = map[key];
+    exportarImagem(frameId, nome, metaId);
+  });
+});
+
+carregarCotacao();
+</script>
+</body>
+</html>
