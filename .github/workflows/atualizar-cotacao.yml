@@ -31,4 +31,11 @@ jobs:
           git config user.email "bot@mahary.local"
           git add cotacao.json
           git diff --cached --quiet || git commit -m "Atualiza cotação do ouro ($(date -u +%Y-%m-%d))"
+          # Se alguém mudou o repo manualmente entre o checkout e este ponto
+          # (ex.: upload direto no site do GitHub), o push abaixo seria
+          # rejeitado ("fetch first"). Para evitar isso, puxamos o que
+          # mudou no remoto e reaplicamos nosso commit por cima antes de
+          # empurrar. Se não houver nada para commitar, estes comandos
+          # são inofensivos.
+          git pull --rebase origin main
           git push
