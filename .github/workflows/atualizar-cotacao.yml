@@ -4,6 +4,10 @@ on:
   schedule:
     # 11:00 UTC = 08:00 horário de Brasília, de segunda a sexta
     - cron: "0 11 * * 1-5"
+    # Segundo disparo (13:00 BRT): os agendamentos do GitHub atrasam horas e a
+    # fonte (bullion-rates) às vezes ainda não publicou a cotação do dia no
+    # primeiro. Sem mudança na fonte, o job não commita nada.
+    - cron: "0 16 * * 1-5"
   workflow_dispatch: {}  # permite rodar manualmente pelo botão "Run workflow"
 
 permissions:
