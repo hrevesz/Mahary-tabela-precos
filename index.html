@@ -94,9 +94,12 @@
   }
   .mini-header { display: none; }
   .exporting .mini-header {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    display: block; margin-bottom: 10px;
   }
-  .mini-logo { height: 24px; width: auto; display: block; }
+  .mini-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mini-title { font-weight: 700; color: var(--dark); font-size: 17px; margin-top: 10px; }
+  .mini-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .mini-logo { height: 38px; width: auto; display: block; }
   .exporting .mini-header .meta { font-size: 10px; color: var(--text-dim); }
 
   footer {
@@ -142,8 +145,12 @@
     </div>
     <div class="export-frame" id="frame-fixa">
       <div class="mini-header">
-        <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
-        <div class="meta" id="mini-meta-fixa"></div>
+        <div class="mini-top">
+          <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
+          <div class="meta" id="mini-meta-fixa"></div>
+        </div>
+        <div class="mini-title"></div>
+        <div class="mini-sub"></div>
       </div>
       <table id="table-fixa"></table>
     </div>
@@ -160,8 +167,12 @@
     </div>
     <div class="export-frame" id="frame-var1">
       <div class="mini-header">
-        <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
-        <div class="meta" id="mini-meta-var1"></div>
+        <div class="mini-top">
+          <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
+          <div class="meta" id="mini-meta-var1"></div>
+        </div>
+        <div class="mini-title"></div>
+        <div class="mini-sub"></div>
       </div>
       <table id="table-var1"></table>
     </div>
@@ -178,8 +189,12 @@
     </div>
     <div class="export-frame" id="frame-var2">
       <div class="mini-header">
-        <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
-        <div class="meta" id="mini-meta-var2"></div>
+        <div class="mini-top">
+          <img src="logo.png" alt="Mahary Metaloquímica" class="mini-logo">
+          <div class="meta" id="mini-meta-var2"></div>
+        </div>
+        <div class="mini-title"></div>
+        <div class="mini-sub"></div>
       </div>
       <table id="table-var2"></table>
     </div>
@@ -322,6 +337,11 @@ async function exportarImagem(frameId, nomeArquivo, metaId) {
   // Preenche o texto do mini-cabeçalho (a logo já está no DOM desde o carregamento da página)
   document.getElementById(metaId).textContent =
     `${document.getElementById('data-badge').textContent} · Cotação R$ ${fmt(cotacaoAtual || 0)}/g`;
+
+  // Título/subtítulo da tabela no cabeçalho da imagem (senão não dá pra saber qual é qual)
+  const card = frame.closest('.table-card');
+  frame.querySelector('.mini-title').textContent = card.querySelector('.table-title').textContent;
+  frame.querySelector('.mini-sub').textContent = card.querySelector('.table-sub').textContent;
 
   frame.classList.add('exporting');
 
