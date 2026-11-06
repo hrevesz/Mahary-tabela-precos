@@ -8,6 +8,11 @@ on:
     # fonte (bullion-rates) às vezes ainda não publicou a cotação do dia no
     # primeiro. Sem mudança na fonte, o job não commita nada.
     - cron: "0 16 * * 1-5"
+    # A fonte só publica a linha do dia DEPOIS do fechamento (a de 05/11 não
+    # existia às 18:36 BRT). Disparos tardios, de terça a sábado (UTC), pegam
+    # o fechamento do dia útil anterior antes da Action do Midas (09:30 UTC).
+    - cron: "0 2 * * 2-6"
+    - cron: "0 8 * * 2-6"
   workflow_dispatch: {}  # permite rodar manualmente pelo botão "Run workflow"
 
 permissions:
